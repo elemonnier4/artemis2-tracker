@@ -50,22 +50,6 @@ h1{
   font-size:2rem;
 }
 
-/* MET */
-.met-bar{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:6px;
-  padding:12px 16px;
-  margin-bottom:20px;
-  display:flex;
-  justify-content:space-between;
-}
-
-.met-value{
-  font-family:var(--display);
-  color:var(--amber);
-}
-
 /* Cards */
 .cards{display:flex;flex-direction:column;gap:12px;}
 
@@ -85,7 +69,7 @@ h1{
 .card-value{
   font-family:var(--display);
   font-size:1.6rem;
-  color:#fff;
+  color:var(--amber);
 }
 
 /* Status */
@@ -106,24 +90,25 @@ h1{
   <h1>ARTEMIS II</h1>
 </header>
 
-<div class="met-bar">
-  <span>MET</span>
-  <span class="met-value" id="met">—</span>
+<div class="cards">
+  <div class="card">
+    <div class="card-label">MET</div>
+    <div class="met-value" id="met">—</div>
 </div>
 
 <div class="cards">
   <div class="card">
-    <div class="card-label">Distance Terre</div>
+    <div class="card-label">Distance à la Terre</div>
     <div class="card-value" id="earth">—</div>
   </div>
 
   <div class="card">
-    <div class="card-label">Distance Lune</div>
+    <div class="card-label">Distance à la Lune</div>
     <div class="card-value" id="moon">—</div>
   </div>
 
   <div class="card">
-    <div class="card-label">Vitesse (/ Terre)</div>
+    <div class="card-label">Vitesse (par rapport à la Terre)</div>
     <div class="card-value" id="speed">—</div>
   </div>
 </div>
@@ -163,13 +148,13 @@ updateMET();
 // FORMAT
 // ==============================
 function fmtKm(km) {
-  if (km == null) return "—";
-  if (km >= 1e6) return (km/1e6).toFixed(3) + " M km";
-  return km.toLocaleString('fr-FR') + " km";
+  const arrondi = Math.round(km);
+  return arrondi.toLocaleString('fr-FR') + "  km";
 }
 
 function fmtSpeed(kmh) {
-  return kmh.toLocaleString('fr-FR') + " km/h";
+  const arrondi = Math.round(kmh); 
+  return arrondi.toLocaleString('fr-FR') + " km/h";
 }
 
 // ==============================
@@ -184,8 +169,7 @@ async function refresh() {
 
     document.getElementById("earth").textContent = fmtKm(d.earth);
     document.getElementById("moon").textContent  = fmtKm(d.moon);
-    document.getElementById("speed").textContent =
-      fmtSpeed(d.speed_kmh) + " (" + d.speed_kms.toFixed(2) + " km/s)";
+    document.getElementById("speed").textContent = fmtSpeed(d.speed_kmh);
 
     document.getElementById("status").textContent =
       "OK — " + new Date().toLocaleTimeString();
