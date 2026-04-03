@@ -1,71 +1,167 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Artemis II — Tracker en direct</title>
+<title>Artemis II — Tracker</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
-body {
-  background: #020810;
-  color: #cce8ff;
-  font-family: 'Share Tech Mono', monospace;
-  max-width: 480px;
-  margin: auto;
-  padding: 20px;
+:root {
+  --bg:#020810;--surface:#060f1e;--border:#0d2540;
+  --glow:#00aaff;--glow2:#0055cc;--amber:#ffaa00;
+  --green:#00ff88;--red:#ff3355;--text:#cce8ff;--dim:#3a6080;
+  --mono:'Share Tech Mono', monospace;--display:'Orbitron', sans-serif;
 }
-h1 { text-align: center; }
+*{box-sizing:border-box;margin:0;padding:0;}
 
-.card {
-  background: #060f1e;
-  border: 1px solid #0d2540;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 6px;
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--mono);
+  min-height:100vh;
 }
 
-.value {
-  font-size: 1.5rem;
-  color: white;
+/* Layout */
+.wrapper{
+  max-width:480px;
+  margin:0 auto;
+  padding:24px 16px 40px;
 }
 
-.status {
-  font-size: 0.9rem;
-  color: #888;
-  margin-top: 10px;
+/* Header */
+header{text-align:center;margin-bottom:28px;}
+
+.mission-badge{
+  display:inline-block;
+  font-size:10px;
+  letter-spacing:3px;
+  color:var(--glow);
+  border:1px solid var(--glow2);
+  padding:4px 12px;
+  margin-bottom:14px;
+}
+
+h1{
+  font-family:var(--display);
+  font-weight:900;
+  font-size:2rem;
+}
+
+/* MET */
+.met-bar{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:12px 16px;
+  margin-bottom:20px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.met-value{
+  font-family:var(--display);
+  color:var(--amber);
+}
+
+/* Cards */
+.cards{display:flex;flex-direction:column;gap:12px;}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:16px;
+}
+
+.card-label{
+  font-size:11px;
+  color:var(--dim);
+  margin-bottom:4px;
+}
+
+.card-value{
+  font-family:var(--display);
+  font-size:1.6rem;
+  color:#fff;
+}
+
+/* Status */
+.status{
+  margin-top:20px;
+  font-size:11px;
+  color:var(--dim);
 }
 </style>
-
 </head>
 
 <body>
 
-<h1>ARTEMIS II</h1>
+<div class="wrapper">
 
-<div class="card">
-  <div>Distance Terre</div>
-  <div class="value" id="earth">—</div>
+<header>
+  <div class="mission-badge">MISSION EN COURS</div>
+  <h1>ARTEMIS II</h1>
+</header>
+
+<div class="met-bar">
+  <span>MET</span>
+  <span class="met-value" id="met">—</span>
 </div>
 
-<div class="card">
-  <div>Distance Lune</div>
-  <div class="value" id="moon">—</div>
-</div>
+<div class="cards">
+  <div class="card">
+    <div class="card-label">Distance Terre</div>
+    <div class="card-value" id="earth">—</div>
+  </div>
 
-<div class="card">
-  <div>Vitesse</div>
-  <div class="value" id="speed">—</div>
+  <div class="card">
+    <div class="card-label">Distance Lune</div>
+    <div class="card-value" id="moon">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Vitesse (/ Terre)</div>
+    <div class="card-value" id="speed">—</div>
+  </div>
 </div>
 
 <div class="status" id="status">Connexion…</div>
 
-<script>
-  
-const API_URL = "https://artemis2-tracker.onrender.com/data";
+</div>
 
+<script>
+// ==============================
+// CONFIG
+// ==============================
+const API_URL = "https://artemis2-tracker.onrender.com/data"; // ton API
+const REFRESH_MS = 5000;
+const LAUNCH_UTC = new Date('2026-04-01T22:35:12Z');
+
+// ==============================
+// MET
+// ==============================
+function updateMET() {
+  const now = new Date();
+  const diffS = Math.floor((now - LAUNCH_UTC)/1000);
+  if (diffS < 0) return;
+
+  const j = Math.floor(diffS / 86400);
+  const h = Math.floor((diffS % 86400)/3600).toString().padStart(2,'0');
+  const m = Math.floor((diffS % 3600)/60).toString().padStart(2,'0');
+  const s = (diffS % 60).toString().padStart(2,'0');
+
+  document.getElementById('met').textContent =
+    `${j}j ${h}h ${m}m ${s}s`;
+}
+setInterval(updateMET, 1000);
+updateMET();
+
+// ==============================
+// FORMAT
+// ==============================
 function fmtKm(km) {
   if (km == null) return "—";
   if (km >= 1e6) return (km/1e6).toFixed(3) + " M km";
@@ -76,6 +172,9 @@ function fmtSpeed(kmh) {
   return kmh.toLocaleString('fr-FR') + " km/h";
 }
 
+// ==============================
+// REFRESH API
+// ==============================
 async function refresh() {
   try {
     const res = await fetch(API_URL);
@@ -97,10 +196,8 @@ async function refresh() {
   }
 }
 
-// rafraîchissement auto
-setInterval(refresh, 5000);
+setInterval(refresh, REFRESH_MS);
 refresh();
-
 </script>
 
 </body>
