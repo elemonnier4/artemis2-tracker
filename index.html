@@ -1,502 +1,107 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Artemis II — Tracker en direct</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
 <style>
-  :root {
-    --bg:       #020810;
-    --surface:  #060f1e;
-    --border:   #0d2540;
-    --glow:     #00aaff;
-    --glow2:    #0055cc;
-    --amber:    #ffaa00;
-    --green:    #00ff88;
-    --red:      #ff3355;
-    --text:     #cce8ff;
-    --dim:      #3a6080;
-    --mono:     'Share Tech Mono', monospace;
-    --display:  'Orbitron', sans-serif;
-  }
+body {
+  background: #020810;
+  color: #cce8ff;
+  font-family: 'Share Tech Mono', monospace;
+  max-width: 480px;
+  margin: auto;
+  padding: 20px;
+}
+h1 { text-align: center; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+.card {
+  background: #060f1e;
+  border: 1px solid #0d2540;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 6px;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--mono);
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
-  }
+.value {
+  font-size: 1.5rem;
+  color: white;
+}
 
-  /* Starfield */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image:
-      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.7) 0%, transparent 100%),
-      radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,.5) 0%, transparent 100%),
-      radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,.6) 0%, transparent 100%),
-      radial-gradient(1px 1px at 75% 55%, rgba(255,255,255,.4) 0%, transparent 100%),
-      radial-gradient(1px 1px at 90% 85%, rgba(255,255,255,.7) 0%, transparent 100%),
-      radial-gradient(1px 1px at 20% 90%, rgba(255,255,255,.3) 0%, transparent 100%),
-      radial-gradient(1px 1px at 65% 40%, rgba(255,255,255,.5) 0%, transparent 100%),
-      radial-gradient(1px 1px at 42% 60%, rgba(200,220,255,.4) 0%, transparent 100%),
-      radial-gradient(1px 1px at 85% 25%, rgba(200,220,255,.6) 0%, transparent 100%),
-      radial-gradient(1px 1px at 5%  50%, rgba(255,255,255,.5) 0%, transparent 100%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Glow orb Earth */
-  .orb-earth {
-    position: fixed;
-    bottom: -120px; left: -80px;
-    width: 320px; height: 320px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,80,200,.35) 0%, transparent 70%);
-    pointer-events: none; z-index: 0;
-  }
-  /* Glow orb Moon */
-  .orb-moon {
-    position: fixed;
-    top: -80px; right: -60px;
-    width: 220px; height: 220px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(150,180,255,.2) 0%, transparent 70%);
-    pointer-events: none; z-index: 0;
-  }
-
-  .wrapper {
-    position: relative; z-index: 1;
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 24px 16px 40px;
-  }
-
-  /* ── Header ── */
-  header { text-align: center; margin-bottom: 28px; }
-
-  .mission-badge {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: var(--glow);
-    border: 1px solid var(--glow2);
-    padding: 4px 12px;
-    border-radius: 2px;
-    margin-bottom: 14px;
-    animation: pulse-border 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse-border {
-    0%,100% { border-color: var(--glow2); box-shadow: 0 0 6px rgba(0,170,255,.2); }
-    50%      { border-color: var(--glow);  box-shadow: 0 0 14px rgba(0,170,255,.5); }
-  }
-
-  h1 {
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: clamp(1.6rem, 7vw, 2.2rem);
-    letter-spacing: 2px;
-    line-height: 1.1;
-    background: linear-gradient(135deg, #ffffff 0%, var(--glow) 60%, #0055ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .subtitle {
-    margin-top: 8px;
-    font-size: 11px;
-    color: var(--dim);
-    letter-spacing: 1px;
-  }
-
-  /* ── MET bar ── */
-  .met-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .met-label {
-    font-size: 10px;
-    color: var(--dim);
-    letter-spacing: 2px;
-    white-space: nowrap;
-  }
-  .met-value {
-    font-family: var(--display);
-    font-size: clamp(1rem, 5vw, 1.25rem);
-    font-weight: 700;
-    color: var(--amber);
-    letter-spacing: 1px;
-    text-shadow: 0 0 12px rgba(255,170,0,.4);
-  }
-
-  /* ── Cards ── */
-  .cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color .3s;
-  }
-  .card::before {
-    content: '';
-    position: absolute; top: 0; left: 0;
-    width: 3px; height: 100%;
-    background: var(--glow2);
-    transition: background .3s;
-  }
-  .card.updated::before { background: var(--green); }
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  .card-label {
-    font-size: 10px;
-    letter-spacing: 2.5px;
-    color: var(--dim);
-    text-transform: uppercase;
-  }
-  .card-icon { font-size: 18px; }
-
-  .card-value {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: clamp(1.3rem, 6vw, 1.7rem);
-    color: #fff;
-    letter-spacing: 1px;
-    text-shadow: 0 0 16px rgba(0,170,255,.3);
-    transition: color .4s;
-  }
-  .card-value.loading { color: var(--dim); animation: blink 1.2s step-end infinite; }
-  .card-value.error   { color: var(--red); font-size: 1rem; }
-
-  .card-sub {
-    margin-top: 4px;
-    font-size: 11px;
-    color: var(--dim);
-  }
-
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-  /* ── Status bar ── */
-  .status-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    color: var(--dim);
-    margin-bottom: 20px;
-  }
-  .status-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--amber);
-    flex-shrink: 0;
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-  .status-dot.ok     { background: var(--green); }
-  .status-dot.error  { background: var(--red); animation: none; }
-  @keyframes pulse-dot {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50%     { opacity: .4; transform: scale(.7); }
-  }
-
-  /* ── Refresh button ── */
-  .btn-refresh {
-    width: 100%;
-    background: transparent;
-    border: 1px solid var(--glow2);
-    color: var(--glow);
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 2px;
-    padding: 13px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all .25s;
-    text-transform: uppercase;
-  }
-  .btn-refresh:active {
-    background: rgba(0,100,200,.2);
-    border-color: var(--glow);
-    box-shadow: 0 0 16px rgba(0,170,255,.3);
-  }
-  .btn-refresh:disabled { opacity: .4; cursor: not-allowed; }
-
-  /* ── Footer ── */
-  footer {
-    margin-top: 28px;
-    text-align: center;
-    font-size: 10px;
-    color: var(--dim);
-    line-height: 1.8;
-    letter-spacing: 1px;
-  }
-  footer a { color: var(--glow2); text-decoration: none; }
-
-  /* ── Scan line effect ── */
-  body::after {
-    content: '';
-    position: fixed; inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,.03) 2px,
-      rgba(0,0,0,.03) 4px
-    );
-    pointer-events: none; z-index: 999;
-  }
+.status {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 10px;
+}
 </style>
+
 </head>
+
 <body>
 
-<div class="orb-earth"></div>
-<div class="orb-moon"></div>
+<h1>ARTEMIS II</h1>
 
-<div class="wrapper">
-
-  <header>
-    <div class="mission-badge">● MISSION EN COURS</div>
-    <h1>ARTEMIS II</h1>
-    <p class="subtitle">ORION SPACECRAFT · SUIVI EN DIRECT</p>
-  </header>
-
-  <div class="met-bar">
-    <span class="met-label">MET</span>
-    <span class="met-value" id="met">—</span>
-  </div>
-
-  <div class="cards">
-    <div class="card" id="card-earth">
-      <div class="card-header">
-        <span class="card-label">Distance à la Terre</span>
-        <span class="card-icon">🌍</span>
-      </div>
-      <div class="card-value loading" id="val-earth">Chargement…</div>
-      <div class="card-sub" id="sub-earth"></div>
-    </div>
-
-    <div class="card" id="card-moon">
-      <div class="card-header">
-        <span class="card-label">Distance à la Lune</span>
-        <span class="card-icon">🌙</span>
-      </div>
-      <div class="card-value loading" id="val-moon">Chargement…</div>
-      <div class="card-sub" id="sub-moon"></div>
-    </div>
-
-    <div class="card" id="card-speed">
-      <div class="card-header">
-        <span class="card-label">Vitesse (/ Terre)</span>
-        <span class="card-icon">⚡</span>
-      </div>
-      <div class="card-value loading" id="val-speed">Chargement…</div>
-      <div class="card-sub" id="sub-speed"></div>
-    </div>
-  </div>
-
-  <div class="status-bar">
-    <div class="status-dot" id="dot"></div>
-    <span id="status-text">Connexion à l'API NASA/JPL…</span>
-  </div>
-
-  <button class="btn-refresh" id="btn" onclick="refresh()">↻ &nbsp;Actualiser</button>
-
-  <footer>
-    Données : <a href="https://ssd.jpl.nasa.gov/" target="_blank">NASA/JPL Horizons</a>
-    · Spacecraft ID –1024<br>
-    Rafraîchissement automatique toutes les 5 s
-  </footer>
-
+<div class="card">
+  <div>Distance Terre</div>
+  <div class="value" id="earth">—</div>
 </div>
 
+<div class="card">
+  <div>Distance Lune</div>
+  <div class="value" id="moon">—</div>
+</div>
+
+<div class="card">
+  <div>Vitesse</div>
+  <div class="value" id="speed">—</div>
+</div>
+
+<div class="status" id="status">Connexion…</div>
+
 <script>
-// ── Config ──────────────────────────────────────────────────────────────────
-const SPACECRAFT = '-1024';
-const EARTH_ID   = '399';
-const MOON_ID    = '301';
-const REFRESH_MS = 5000;
-const LAUNCH_UTC = new Date('2026-04-01T22:35:12Z');
 
-let timer = null;
+const API_URL = "https://artemis2-tracker.onrender.com/data";
 
-// ── MET (Mission Elapsed Time) ───────────────────────────────────────────────
-function updateMET() {
-  const now   = new Date();
-  const diffS = Math.floor((now - LAUNCH_UTC) / 1000);
-  if (diffS < 0) { document.getElementById('met').textContent = 'avant lancement'; return; }
-  const j  = Math.floor(diffS / 86400);
-  const h  = Math.floor((diffS % 86400) / 3600).toString().padStart(2,'0');
-  const m  = Math.floor((diffS % 3600)  / 60  ).toString().padStart(2,'0');
-  const s  = (diffS % 60).toString().padStart(2,'0');
-  document.getElementById('met').textContent = `${j}j ${h}h ${m}m ${s}s`;
-}
-setInterval(updateMET, 1000);
-updateMET();
-
-// ── Horizons API ─────────────────────────────────────────────────────────────
-async function queryHorizons(target, center) {
-  const now   = new Date();
-  const t0    = now.toISOString().slice(0,16).replace('T',' ');
-  const t1end = new Date(now.getTime() + 2*60000);
-  const t1    = t1end.toISOString().slice(0,16).replace('T',' ');
-
-  const p = new URLSearchParams({
-    format:     'json',
-    COMMAND:    `'${target}'`,
-    CENTER:     `'500@${center}'`,
-    EPHEM_TYPE: 'VECTORS',
-    VEC_TABLE:  '3',
-    START_TIME: `'${t0}'`,
-    STOP_TIME:  `'${t1}'`,
-    STEP_SIZE:  "'1 m'",
-    OUT_UNITS:  'KM-S',
-    OBJ_DATA:   'NO',
-    CSV_FORMAT: 'YES',
-  });
-
-  const res = await fetch(`https://ssd.jpl.nasa.gov/api/horizons.api?${p}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  const raw  = json.result || '';
-
-  const m = raw.match(/\$\$SOE([\s\S]*?)\$\$EOE/);
-  if (!m) throw new Error('Pas de données dans la réponse JPL');
-
-  // Parser la 1re ligne CSV de données
-  for (const line of m[1].split('\n')) {
-    const parts = line.trim().split(',').map(s => s.trim());
-    if (parts.length < 11 || isNaN(parseFloat(parts[2]))) continue;
-    return {
-      vx: parseFloat(parts[5]),
-      vy: parseFloat(parts[6]),
-      vz: parseFloat(parts[7]),
-      RG: parseFloat(parts[9]),   // distance km (calculée par Horizons)
-    };
-  }
-  throw new Error('Parsing CSV échoué');
-}
-
-// ── Formatage ────────────────────────────────────────────────────────────────
 function fmtKm(km) {
-  if (km === null) return '—';
-  if (km >= 1e6) return (km/1e6).toFixed(3) + ' M km';
-  return km.toLocaleString('fr-FR', {maximumFractionDigits:0}) + ' km';
+  if (km == null) return "—";
+  if (km >= 1e6) return (km/1e6).toFixed(3) + " M km";
+  return km.toLocaleString('fr-FR') + " km";
 }
+
 function fmtSpeed(kmh) {
-  return kmh.toLocaleString('fr-FR', {maximumFractionDigits:0}) + ' km/h';
+  return kmh.toLocaleString('fr-FR') + " km/h";
 }
 
-// ── Flash card ───────────────────────────────────────────────────────────────
-function flash(cardId) {
-  const card = document.getElementById(cardId);
-  card.classList.add('updated');
-  setTimeout(() => card.classList.remove('updated'), 1500);
-}
-
-// ── Mise à jour UI ───────────────────────────────────────────────────────────
-function setCard(valId, subId, cardId, value, sub) {
-  const el = document.getElementById(valId);
-  el.textContent = value;
-  el.className   = 'card-value';
-  document.getElementById(subId).textContent = sub || '';
-  flash(cardId);
-}
-
-function setError(valId) {
-  const el = document.getElementById(valId);
-  el.textContent = 'Erreur';
-  el.className   = 'card-value error';
-}
-
-function setStatus(ok, text) {
-  const dot = document.getElementById('dot');
-  dot.className = 'status-dot ' + (ok === null ? '' : ok ? 'ok' : 'error');
-  document.getElementById('status-text').textContent = text;
-}
-
-// ── Fetch principal ──────────────────────────────────────────────────────────
 async function refresh() {
-  const btn = document.getElementById('btn');
-  btn.disabled = true;
-  setStatus(null, 'Interrogation NASA/JPL Horizons…');
-
-  let earthOk = false, moonOk = false, speedOk = false;
-
-  // Distance Terre + vitesse
   try {
-    const d = await queryHorizons(SPACECRAFT, EARTH_ID);
-    const distEarth = d.RG;
-    const speedKms  = Math.sqrt(d.vx**2 + d.vy**2 + d.vz**2);
-    const speedKmh  = speedKms * 3600;
+    const res = await fetch(API_URL);
+    const d = await res.json();
 
-    setCard('val-earth','sub-earth','card-earth',
-      fmtKm(distEarth),
-      `± trajectoire libre autour de la Lune`);
+    if (d.error) throw new Error(d.error);
 
-    setCard('val-speed','sub-speed','card-speed',
-      fmtSpeed(speedKmh),
-      `${speedKms.toFixed(2)} km/s`);
+    document.getElementById("earth").textContent = fmtKm(d.earth);
+    document.getElementById("moon").textContent  = fmtKm(d.moon);
+    document.getElementById("speed").textContent =
+      fmtSpeed(d.speed_kmh) + " (" + d.speed_kms.toFixed(2) + " km/s)";
 
-    earthOk = true; speedOk = true;
-  } catch(e) {
-    setError('val-earth');
-    setError('val-speed');
-    console.error('Terre:', e);
+    document.getElementById("status").textContent =
+      "OK — " + new Date().toLocaleTimeString();
+
+  } catch (e) {
+    document.getElementById("status").textContent =
+      "Erreur : " + e.message;
   }
-
-  // Distance Lune
-  try {
-    const d = await queryHorizons(SPACECRAFT, MOON_ID);
-    setCard('val-moon','sub-moon','card-moon',
-      fmtKm(d.RG),
-      `Périséléné prévu : ~8 900 km`);
-    moonOk = true;
-  } catch(e) {
-    setError('val-moon');
-    console.error('Lune:', e);
-  }
-
-  const allOk = earthOk && moonOk && speedOk;
-  const now   = new Date();
-  const hms   = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  setStatus(allOk,
-    allOk
-      ? `Mis à jour à ${hms} UTC+2 · prochain dans 60 s`
-      : `Mise à jour partielle à ${hms}`
-  );
-
-  btn.disabled = false;
-
-  // Planifier le prochain rafraîchissement
-  clearTimeout(timer);
-  timer = setTimeout(refresh, REFRESH_MS);
 }
 
-// ── Lancement ────────────────────────────────────────────────────────────────
+// rafraîchissement auto
+setInterval(refresh, 5000);
 refresh();
+
 </script>
+
 </body>
 </html>
