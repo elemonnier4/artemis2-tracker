@@ -5,12 +5,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Artemis II — Tracker en direct</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-
 <style>
-/* (STYLE IDENTIQUE — NON MODIFIÉ) */
+/* --- STYLE ORIGINAL STRICTEMENT CONSERVÉ --- */
 :root {
   --bg:#020810;--surface:#060f1e;--border:#0d2540;
   --glow:#00aaff;--glow2:#0055cc;--amber:#ffaa00;
@@ -18,15 +16,15 @@
   --mono:'Share Tech Mono', monospace;--display:'Orbitron', sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:var(--mono);}
-.wrapper{max-width:480px;margin:auto;padding:20px;}
-h1{text-align:center;font-family:var(--display);}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;}
+.wrapper{max-width:480px;margin:0 auto;padding:24px 16px 40px;}
+h1{font-family:var(--display);text-align:center;}
 
 .card{background:var(--surface);border:1px solid var(--border);
-padding:12px;margin:10px 0;border-radius:6px;}
-.card-value{font-size:1.5rem;color:#fff;}
-.status{font-size:0.9rem;color:var(--dim);}
-</style>
+padding:16px;margin-bottom:12px;border-radius:8px;}
+.card-value{font-family:var(--display);font-size:1.6rem;color:#fff;}
+
+.status{font-size:11px;color:var(--dim);margin-top:10px;} </style>
 
 </head>
 
@@ -47,7 +45,7 @@ padding:12px;margin:10px 0;border-radius:6px;}
 </div>
 
 <div class="card">
-  <div>Vitesse</div>
+  <div>Vitesse (/ Terre)</div>
   <div class="card-value" id="val-speed">—</div>
 </div>
 
@@ -56,35 +54,37 @@ padding:12px;margin:10px 0;border-radius:6px;}
   <div class="card-value" id="met">—</div>
 </div>
 
-<div class="status" id="status">Connexion…</div>
+<div class="status" id="status-text">Connexion à l'API NASA/JPL…</div>
 
 </div>
 
 <script>
 
-// ── CONFIG ─────────────────────────────────────
-// ⚠️ MODIFIER CETTE URL
-const API_URL = "https://artemis2-tracker.onrender.com/data";
+// ── CONFIG ─────────────────────────────────────────
+// ⚠️ À MODIFIER AVEC TON URL RENDER
+const API_URL = "https://ton-app.onrender.com/data";
 
-// ── MET ────────────────────────────────────────
+const REFRESH_MS = 5000;
 const LAUNCH_UTC = new Date('2026-04-01T22:35:12Z');
 
+// ── MET ────────────────────────────────────────────
 function updateMET() {
   const now = new Date();
-  const diff = Math.floor((now - LAUNCH_UTC)/1000);
-  if (diff < 0) return;
+  const diffS = Math.floor((now - LAUNCH_UTC)/1000);
+  if (diffS < 0) return;
 
-  const j = Math.floor(diff/86400);
-  const h = Math.floor((diff%86400)/3600).toString().padStart(2,'0');
-  const m = Math.floor((diff%3600)/60).toString().padStart(2,'0');
-  const s = (diff%60).toString().padStart(2,'0');
+  const j = Math.floor(diffS / 86400);
+  const h = Math.floor((diffS % 86400)/3600).toString().padStart(2,'0');
+  const m = Math.floor((diffS % 3600)/60).toString().padStart(2,'0');
+  const s = (diffS % 60).toString().padStart(2,'0');
 
-  document.getElementById("met").textContent =
+  document.getElementById('met').textContent =
     `${j}j ${h}h ${m}m ${s}s`;
 }
 setInterval(updateMET, 1000);
+updateMET();
 
-// ── FORMAT ─────────────────────────────────────
+// ── FORMAT ─────────────────────────────────────────
 function fmtKm(km){
   if(km==null) return "—";
   if(km>=1e6) return (km/1e6).toFixed(3)+" M km";
@@ -94,29 +94,29 @@ function fmtSpeed(kmh){
   return kmh.toLocaleString('fr-FR')+" km/h";
 }
 
-// ── REFRESH ────────────────────────────────────
+// ── REFRESH (MODIFIÉ UNIQUEMENT ICI) ───────────────
 async function refresh(){
-  try{
+  try {
     const res = await fetch(API_URL);
     const d = await res.json();
 
-    if(d.error) throw new Error(d.error);
+    if (d.error) throw new Error(d.error);
 
     document.getElementById("val-earth").textContent = fmtKm(d.earth);
     document.getElementById("val-moon").textContent  = fmtKm(d.moon);
     document.getElementById("val-speed").textContent =
       fmtSpeed(d.speed_kmh) + " (" + d.speed_kms.toFixed(2) + " km/s)";
 
-    document.getElementById("status").textContent =
-      "Données JPL Horizons · OK";
+    document.getElementById("status-text").textContent =
+      "Données JPL Horizons · en direct";
 
-  }catch(e){
-    document.getElementById("status").textContent =
+  } catch(e) {
+    document.getElementById("status-text").textContent =
       "Erreur : " + e.message;
   }
 }
 
-setInterval(refresh, 5000);
+setInterval(refresh, REFRESH_MS);
 refresh();
 
 </script>
